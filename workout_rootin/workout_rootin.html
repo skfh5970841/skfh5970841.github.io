@@ -5,14 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>카드 출력</title>
     <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        background: #f0f0f0;
+        padding: 20px;
+      }
       #output {
-        white-space: pre-line; /* 개행을 유지하기 위한 스타일 */
+        background: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        margin-bottom: 20px;
+        white-space: pre-line;
+        font-size: 1.5em;
+        max-width: 90%;
       }
       #nextButton {
-        margin-top: 10px;
-        padding: 10px;
-        font-size: 16px;
+        padding: 15px 30px;
+        font-size: 1.5em;
         cursor: pointer;
+        border: none;
+        border-radius: 5px;
+        background: #007bff;
+        color: #fff;
+        transition: background 0.3s;
+      }
+      #nextButton:hover {
+        background: #0056b3;
+      }
+      #nextButton:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
       }
     </style>
   </head>
@@ -22,9 +52,6 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        // JavaScript로 구현된 기능들을 여기에 작성합니다.
-
-        // 카드 생성 함수
         function pokerGeneratorForExercise() {
           const numbers = [
             "2",
@@ -42,7 +69,6 @@
             "A",
           ];
           const patterns = ["하트", "다이아몬드", "스페이드", "클로버"];
-
           const cardList = [];
 
           for (const pattern of patterns) {
@@ -58,7 +84,6 @@
           return cardList;
         }
 
-        // 카드 섞기 함수
         function shuffleCards(cardList) {
           const shuffledCards = [];
           const totalCards = cardList.length;
@@ -74,12 +99,10 @@
           return shuffledCards.map((index) => cardList[index]);
         }
 
-        // 다음 카드 가져오기 함수
         function getNextCard(deck, currentIndex) {
           return currentIndex < deck.length ? deck[currentIndex] : null;
         }
 
-        // 카드 정보 표시 함수
         function displayCardInfo(cardName, remainingCards) {
           const components = cardName.split(" ", 2);
           const number = components[0];
@@ -100,18 +123,16 @@
           return output;
         }
 
-        // 주요 실행 코드
         const cardList = pokerGeneratorForExercise();
         const shuffledDeck = shuffleCards(cardList);
 
         let currentCardIndex = 0;
-        let countdown; // 카운터 값
+        let countdown;
 
         const outputDiv = document.getElementById("output");
         const nextButton = document.getElementById("nextButton");
 
         function showNextCard() {
-          // 이전 카드와 카운트를 지우고 새로운 카드를 표시
           outputDiv.innerText = "";
           clearTimeout(countdown);
 
@@ -131,7 +152,7 @@
         }
 
         function startCountdown() {
-          let count = 7; // 초기 카운터 값 설정
+          let count = 7;
           const countdownDiv = document.createElement("div");
           outputDiv.appendChild(countdownDiv);
 
@@ -143,7 +164,7 @@
             }
 
             count--;
-            countdown = setTimeout(updateCountdown, 1000); // 1초 간격으로 업데이트
+            countdown = setTimeout(updateCountdown, 1000);
           }
 
           updateCountdown();
@@ -157,7 +178,7 @@
 
         nextButton.addEventListener("click", showNextCard);
 
-        showNextCard(); // 스크립트 실행 시작
+        showNextCard();
       });
     </script>
   </body>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fitness Routine App</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f9;
+      }
+      header {
+        background: #333;
+        color: #fff;
+        padding: 1rem;
+        text-align: center;
+      }
+      .container {
+        padding: 1rem;
+        max-width: 800px;
+        margin: auto;
+      }
+      .section {
+        margin-bottom: 2rem;
+        background: #fff;
+        padding: 1rem;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      .button {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        margin: 0.5rem 0;
+        background: #007bff;
+        color: #fff;
+        text-decoration: none;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      .button:hover {
+        background: #0056b3;
+      }
+      .input-group {
+        margin-bottom: 1rem;
+      }
+      .input-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+      }
+      .input-group input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+      ul li {
+        background: #f9f9f9;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+        border-radius: 3px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      ul li .remove {
+        background: #dc3545;
+        color: #fff;
+        border: none;
+        padding: 0.3rem 0.5rem;
+        cursor: pointer;
+      }
+      ul li .remove:hover {
+        background: #a71d2a;
+      }
+      .timer {
+        font-size: 2rem;
+        text-align: center;
+        margin: 1rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Fitness Routine App</h1>
+    </header>
+    <main class="container">
+      <!-- Section 1: List of saved routines -->
+      <div class="section" id="section1">
+        <h2>Saved Routines</h2>
+        <ul id="routineList"></ul>
+      </div>
+
+      <!-- Section 2: Add a new routine -->
+      <div class="section" id="section2">
+        <h2>Add New Routine</h2>
+        <div class="input-group">
+          <label for="routineName">Routine Name</label>
+          <input
+            type="text"
+            id="routineName"
+            placeholder="Enter routine name"
+          />
+        </div>
+        <div class="input-group">
+          <label for="exerciseName">Exercise Name</label>
+          <input
+            type="text"
+            id="exerciseName"
+            placeholder="Enter exercise name"
+          />
+        </div>
+        <div class="input-group">
+          <label for="exerciseTime">Time (seconds)</label>
+          <input
+            type="number"
+            id="exerciseTime"
+            placeholder="Enter time in seconds"
+          />
+        </div>
+        <div class="input-group">
+          <label for="exerciseReps">Reps</label>
+          <input
+            type="number"
+            id="exerciseReps"
+            placeholder="Enter number of reps"
+          />
+        </div>
+        <button class="button" id="addExercise">Add Exercise</button>
+        <ul id="exerciseList"></ul>
+        <button class="button" id="saveRoutine">Save Routine</button>
+      </div>
+
+      <!-- Routine Execution Section (Hidden initially) -->
+      <div class="section" id="executionSection" style="display: none">
+        <h2>Routine Execution</h2>
+        <div class="exercise-info">
+          <p id="currentExercise">Exercise: N/A</p>
+          <p id="exerciseDetails">Details: N/A</p>
+        </div>
+        <div class="timer" id="timer">00:00</div>
+        <button class="button" id="prevExercise">Previous</button>
+        <button class="button" id="nextExercise">Next</button>
+        <button class="button" id="stopRoutine">Stop</button>
+      </div>
+    </main>
+
+    <script>
+      // DOM Elements
+      const routineList = document.getElementById("routineList");
+      const exerciseList = document.getElementById("exerciseList");
+      const executionSection = document.getElementById("executionSection");
+      const timer = document.getElementById("timer");
+      const currentExerciseEl = document.getElementById("currentExercise");
+      const exerciseDetailsEl = document.getElementById("exerciseDetails");
+
+      // Global Variables
+      let routines = JSON.parse(localStorage.getItem("routines")) || [];
+      let currentRoutine = [];
+      let currentExerciseIndex = 0;
+      let timerInterval;
+      let currentRoutineName = ""; // 현재 실행 중인 루틴 이름 추적
+
+      function updateRoutineList() {
+        routineList.innerHTML = "";
+        routines.forEach((routine, index) => {
+          const li = document.createElement("li");
+          li.textContent = routine.name;
+
+          const startButton = document.createElement("button");
+          startButton.textContent = "Start";
+          startButton.className = "button";
+          startButton.addEventListener("click", () => startRoutine(index));
+
+          const removeButton = document.createElement("button");
+          removeButton.textContent = "Remove";
+          removeButton.className = "remove";
+          removeButton.addEventListener("click", () => removeRoutine(index));
+
+          li.appendChild(startButton);
+          li.appendChild(removeButton);
+          routineList.appendChild(li);
+        });
+      }
+
+      function removeRoutine(index) {
+        routines.splice(index, 1);
+        localStorage.setItem("routines", JSON.stringify(routines));
+        updateRoutineList();
+      }
+
+      document.getElementById("addExercise").addEventListener("click", () => {
+        const exerciseName = document.getElementById("exerciseName").value;
+        const exerciseTime = document.getElementById("exerciseTime").value;
+        const exerciseReps = document.getElementById("exerciseReps").value;
+
+        if (!exerciseName) {
+          alert("Exercise name is required.");
+          return;
+        }
+
+        const exercise = {
+          name: exerciseName,
+          time: parseInt(exerciseTime) || null,
+          reps: parseInt(exerciseReps) || null,
+        };
+        currentRoutine.push(exercise);
+
+        const li = document.createElement("li");
+        li.textContent = `${exercise.name} - ${exercise.time || "N/A"}s - ${
+          exercise.reps || "N/A"
+        } reps`;
+
+        const removeButton = document.createElement("button");
+        removeButton.textContent = "Remove";
+        removeButton.className = "remove";
+        removeButton.addEventListener("click", () => {
+          exerciseList.removeChild(li);
+          currentRoutine = currentRoutine.filter((e) => e !== exercise);
+        });
+
+        li.appendChild(removeButton);
+        exerciseList.appendChild(li);
+      });
+
+      document.getElementById("saveRoutine").addEventListener("click", () => {
+        const routineName = document.getElementById("routineName").value;
+
+        if (!routineName || currentRoutine.length === 0) {
+          alert("Routine name and exercises are required.");
+          return;
+        }
+
+        routines.push({ name: routineName, exercises: [...currentRoutine] });
+        localStorage.setItem("routines", JSON.stringify(routines));
+        updateRoutineList();
+
+        currentRoutine = [];
+        exerciseList.innerHTML = "";
+        document.getElementById("routineName").value = "";
+        alert("Routine saved successfully!");
+      });
+
+      function startRoutine(index) {
+        currentExerciseIndex = 0;
+        const selectedRoutine = routines[index];
+        currentRoutineName = selectedRoutine.name; // 현재 루틴 이름 저장
+        executionSection.style.display = "block";
+        executeExercise(selectedRoutine);
+      }
+
+      function executeExercise(routine) {
+        clearInterval(timerInterval);
+
+        if (currentExerciseIndex < routine.exercises.length) {
+          const exercise = routine.exercises[currentExerciseIndex];
+          currentExerciseEl.textContent = `Exercise: ${exercise.name}`;
+          exerciseDetailsEl.textContent = `Details: ${
+            exercise.time ? exercise.time + " seconds" : ""
+          } ${exercise.reps ? exercise.reps + " reps" : ""}`;
+
+          if (exercise.time) {
+            startTimer(exercise.time);
+          } else {
+            timer.textContent = "N/A";
+          }
+        } else {
+          alert("Routine complete! Great job!");
+          executionSection.style.display = "none";
+          clearInterval(timerInterval);
+        }
+      }
+
+      function startTimer(duration) {
+        let timeLeft = duration;
+        timer.textContent = `${timeLeft}s`;
+
+        timerInterval = setInterval(() => {
+          timeLeft--;
+          timer.textContent = `${timeLeft}s`;
+
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+          }
+        }, 1000);
+      }
+
+      document.getElementById("nextExercise").addEventListener("click", () => {
+        clearInterval(timerInterval);
+        const selectedRoutine = routines.find(
+          (r) => r.name === currentRoutineName
+        );
+
+        if (selectedRoutine) {
+          currentExerciseIndex++;
+          if (currentExerciseIndex >= selectedRoutine.exercises.length) {
+            alert("Routine complete! Great job!");
+            executionSection.style.display = "none";
+          } else {
+            executeExercise(selectedRoutine);
+          }
+        }
+      });
+
+      document.getElementById("prevExercise").addEventListener("click", () => {
+        clearInterval(timerInterval);
+        const selectedRoutine = routines.find(
+          (r) => r.name === currentRoutineName
+        );
+
+        if (selectedRoutine && currentExerciseIndex > 0) {
+          currentExerciseIndex--;
+          executeExercise(selectedRoutine);
+        }
+      });
+
+      document.getElementById("stopRoutine").addEventListener("click", () => {
+        clearInterval(timerInterval);
+        executionSection.style.display = "none";
+        alert("Routine stopped. You can resume or start a new one.");
+        currentRoutineName = ""; // 현재 루틴 초기화
+      });
+
+      // Initialize the app by loading routines
+      updateRoutineList();
+    </script>
+  </body>
+</html>
